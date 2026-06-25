@@ -1,0 +1,38 @@
+name: Generate F-Droid Repo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install F-Droid Server
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fdroidserver
+
+      - name: Initialize and Update Repo
+        run: |
+          # Se o config.toml não existir, inicializa o repo
+          if [ ! -f "config.toml" ]; then
+            fdroid init --dist
+          fi
+          # Gera o índice com os APKs da pasta fdroid/repo
+          fdroid update --create-metadata
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: . # Envia os arquivos gerados de volta para o GitHub Pages
+          branch: gh-pages # Cria uma ramificação separada para o site do F-Droid
